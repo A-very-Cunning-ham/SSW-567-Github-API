@@ -1,17 +1,34 @@
 import unittest
+from unittest.mock import patch
 import github
 
 
 class TestlistRepos(unittest.TestCase):
-    def test_user1(self):  # i'm not sure where to find more github users with inactive repos so these tests wont break when more commits are made
-        self.assertEqual(github.listRepos("richkempinski"), [['csp', 2], ['hellogitworld', 30], ['helloworld', 6], ['Mocks', 10], [
-                         'Project1', 2], ['richkempinski.github.io', 9], ['threads-of-life', 1], ['try_nbdev', 2], ['try_nbdev2', 5]])
-        self.assertEqual(github.listRepos("Richkempinski"), [['csp', 2], ['hellogitworld', 30], ['helloworld', 6], ['Mocks', 10], [
-                         'Project1', 2], ['richkempinski.github.io', 9], ['threads-of-life', 1], ['try_nbdev', 2], ['try_nbdev2', 5]])
-    
-    def test_invalidUser(self):
-        self.assertRaises(TypeError, github.listRepos, "3782749817") # this random github username doesn't exist and thus will raise a TypeError due to the invalid api response
-        self.assertRaises(TypeError, github.listRepos, "") # similarly, if no username is provided a TypeError will also be raised
 
-if __name__ == '__main__':
+    @patch("github.requests.get")
+    def test_getRepos(self, mock):
+        mock.return_value.json.return_value = [{'name': 'repo1'}, {'name': 'repo2'}]
+        self.assertEqual(github.getRepos("test"), ['repo1', 'repo2'])
+
+    @patch("github.requests.get")
+    def test_getReposInvalid(self, mock):
+        mock.side_effect = TypeError
+        self.assertRaises(TypeError, github.listRepos)
+
+    @patch("github.requests.get")
+    def test_getCommits(self, mock):
+        mock.return_value.json.return_value = [{'name': 'repo1'}, {'name': 'repo2'}]
+        self.assertEqual(github.getCommits("ID", "test"), 2)
+         
+   
+    @patch("github.getCommits")
+    @patch("github.getRepos")
+    def test_listRepos(self, getRepos_mock, getCommits_mock):
+        getRepos_mock.return_value = ["testRepo1", "testRepo2"]
+        getCommits_mock.side_effect = [2, 4]
+        self.assertEqual(github.listRepos("ID"), [["testRepo1", 2], ["testRepo2", 4]])
+
+
+if __name__ == "__main__":
     unittest.main(exit=True)
+
