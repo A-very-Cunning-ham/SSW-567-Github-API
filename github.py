@@ -17,7 +17,7 @@ def listRepos(githubUserID):
     """Returns a list of repositories the respective number of commits for a given Github username"""
     repos = getRepos(githubUserID)
     results = []
-
+    print(f"repos value: {repos}")
     for repo in repos:
         commits = getCommits(githubUserID, repo)
         results.append([repo, commits])
